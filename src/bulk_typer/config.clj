@@ -25,6 +25,11 @@
   [props config-valid configs]
   "bulk-typer.type-attribute" "ipc-filetype")
 
+(cc/defprop-optstr unknown-type
+  "The value that goes in the value column when a type could not be determined."
+  [props config-valid configs]
+  "bulk-typer.unknown-type" "unknown")
+
 (cc/defprop-optlong filetype-read-amount
   "The size, in bytes as a long, of the sample read from iRODS"
   [props config-valid configs]

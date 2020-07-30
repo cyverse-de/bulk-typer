@@ -19,6 +19,7 @@
    :service  "bulk-typer"})
 
 (def irods-pool (Executors/newFixedThreadPool 5))
+(def icat-pool (Executors/newFixedThreadPool 5))
 
 (defn- cli-options
   []
@@ -46,23 +47,15 @@
   (when (ft/exists? file)
     (init/with-jargon (mk-jargon-cfg) [cm]
       (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))
-            agents (mapv agent files)
-            agents (mapv (fn [a] (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))) agents)
-            agents (mapv (fn [a] (send-off a (fn [[f d]] [f (irods/get-file-type d f)]))) agents)]
+            ;; create an agent, queue loading data, and queue getting the file type from that data
+            agents (mapv (fn [f] (as-> (agent f) a
+                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
+                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
+                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)]))
+                               )) files)]
+        ;; wait for agents to finish everything we've tasked them with before deref
         (log-time "await" (apply await agents))
         (mapv deref agents)))))
-
-(defn do-files*
-  [file]
-  (when (ft/exists? file)
-    (mapv (fn [x] (log/info x))
-          (mapv deref
-                (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))]
-                  (log-time "with-jargon"
-                            (init/with-jargon (mk-jargon-cfg) [cm]
-                              (doall (pmap
-                                      (fn [f] (let [d (irods/get-data cm f)] (future [f (irods/get-file-type d f)])))
-                                      files)))))))))
 
 (defn -main
   [& args]
@@ -77,4 +70,5 @@
             (log-time "do-files"
               (do-files (:file options))))
       (.shutdown irods-pool)
+      (.shutdown icat-pool)
       (shutdown-agents))))
