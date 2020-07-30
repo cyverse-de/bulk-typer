@@ -15,6 +15,7 @@
                  [org.cyverse/heuristomancer "2.8.6"]]
   :eastwood {:exclude-namespaces [:test-paths]
              :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
+  :cljfmt {:indents {log-time [[:inner 0]]}}
   :main ^:skip-aot bulk-typer.core
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}

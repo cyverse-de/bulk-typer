@@ -48,11 +48,11 @@
     (init/with-jargon (mk-jargon-cfg) [cm]
       (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))
             ;; create an agent, queue loading data, and queue getting the file type from that data
-            agents (mapv (fn [f] (as-> (agent f) a
-                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
-                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
-                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)]))
-                               )) files)]
+            agents (mapv (fn [f]
+                           (as-> (agent f) a
+                                 (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
+                                 (send a (fn [[f d]] [f (irods/get-file-type d f)]))
+                                 (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
         ;; wait for agents to finish everything we've tasked them with before deref
         (log-time "await" (apply await agents))
         (mapv deref agents)))))
