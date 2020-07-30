@@ -4,7 +4,6 @@
             [clojure.tools.logging :as log]
             [bulk-typer.config :as cfg]))
 
-
 (defn- get-file-type
   "Uses heuristomancer to determine a the file type of a file."
   [cm path]
@@ -12,7 +11,6 @@
     (if-not (nil? result)
       (name result)
       result)))
-
 
 (defn content-type
   "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it

@@ -8,8 +8,7 @@
             [clojure.string :as string]
             [bulk-typer.irods :as irods]
             [bulk-typer.config :as cfg]
-            [service-logging.thread-context :as tc]
-    ))
+            [service-logging.thread-context :as tc]))
 
 (def ^:private svc-info
   {:app-name "bulk-typer"
@@ -28,15 +27,15 @@
 (defn- mk-jargon-cfg
   []
   (init/init (cfg/irods-host)
-    (cfg/irods-port)
-    (cfg/irods-user)
-    (cfg/irods-pass)
-    (cfg/irods-home)
-    (cfg/irods-zone)
-    (cfg/irods-resc)
-    :max-retries (cfg/irods-max-retries)
-    :retry-sleep (cfg/irods-retry-sleep)
-    :use-trash   (cfg/irods-use-trash)))
+             (cfg/irods-port)
+             (cfg/irods-user)
+             (cfg/irods-pass)
+             (cfg/irods-home)
+             (cfg/irods-zone)
+             (cfg/irods-resc)
+             :max-retries (cfg/irods-max-retries)
+             :retry-sleep (cfg/irods-retry-sleep)
+             :use-trash   (cfg/irods-use-trash)))
 
 (defn -main
   [& args]
@@ -49,6 +48,4 @@
       (cfg/load-config-from-file (:config options))
       (when (ft/exists? (:file options))
         (let [files (remove string/blank? (string/split (slurp (:file options)) (re-pattern "\n")))]
-          (log/warn files)
-        ))
-      )))
+          (log/warn files))))))
