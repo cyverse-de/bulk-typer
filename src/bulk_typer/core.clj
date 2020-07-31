@@ -42,20 +42,24 @@
              :retry-sleep (cfg/irods-retry-sleep)
              :use-trash   (cfg/irods-use-trash)))
 
-(defn do-files
+(defn- do-files
+  [files]
+  (init/with-jargon (mk-jargon-cfg) [cm]
+    (let [;; create an agent, queue loading data, and queue getting the file type from that data
+          agents (mapv (fn [f]
+                         (as-> (agent f) a
+                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
+                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
+                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
+        ;; wait for agents to finish everything we've tasked them with before deref
+      (log-time "await" (apply await agents))
+      (mapv deref agents))))
+
+(defn- do-file
   [file]
   (when (ft/exists? file)
-    (init/with-jargon (mk-jargon-cfg) [cm]
-      (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))
-            ;; create an agent, queue loading data, and queue getting the file type from that data
-            agents (mapv (fn [f]
-                           (as-> (agent f) a
-                                 (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
-                                 (send a (fn [[f d]] [f (irods/get-file-type d f)]))
-                                 (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
-        ;; wait for agents to finish everything we've tasked them with before deref
-        (log-time "await" (apply await agents))
-        (mapv deref agents)))))
+    (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))]
+      (do-files files))))
 
 (defn -main
   [& args]
@@ -67,8 +71,8 @@
         (ccli/exit 1 "The config file is not readable."))
       (cfg/load-config-from-file (:config options))
       (mapv (fn [x] (log/info x))
-            (log-time "do-files"
-              (do-files (:file options))))
+            (log-time "do-file"
+              (do-file (:file options))))
       (.shutdown irods-pool)
       (.shutdown icat-pool)
       (shutdown-agents))))
