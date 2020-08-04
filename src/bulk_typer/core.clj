@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [me.raynes.fs :as fs]
             [clj-jargon.init :as init]
+            [clj-icat-direct.icat :as icat]
             [debug-utils.log-time :refer [log-time]]
             [common-cli.core :as ccli]
             [clojure-commons.file-utils :as ft]
@@ -26,6 +27,7 @@
   [["-c" "--config PATH" "Path to the config file"
     :default "/etc/iplant/de/bulk-typer.properties"]
    ["-f" "--file PATH" "Path to a file of paths to process"]
+   ["-p" "--prefix PREFIX" "UUID prefix to process"]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
@@ -44,6 +46,7 @@
 
 (defn- do-files
   [files]
+  (log-time "with-jargon"
   (init/with-jargon (mk-jargon-cfg) [cm]
     (let [;; create an agent, queue loading data, and queue getting the file type from that data
           agents (mapv (fn [f]
@@ -54,6 +57,7 @@
         ;; wait for agents to finish everything we've tasked them with before deref
       (log-time "await" (apply await agents))
       (mapv deref agents))))
+  )
 
 (defn- do-file
   [file]
@@ -70,9 +74,16 @@
       (when-not (fs/readable? (:config options))
         (ccli/exit 1 "The config file is not readable."))
       (cfg/load-config-from-file (:config options))
+      (when (:file options)
       (mapv (fn [x] (log/info x))
             (log-time "do-file"
               (do-file (:file options))))
+      )
+      (when (:prefix options)
+        (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
+        (let [files (log-time "icat" (icat/prefixed-files-without-attr (:prefix options) "ipc-filetype"))]
+          (do-files files))
+      )
       (.shutdown irods-pool)
       (.shutdown icat-pool)
       (shutdown-agents))))

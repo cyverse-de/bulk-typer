@@ -85,9 +85,38 @@
   [props config-valid configs]
   "bulk-typer.irods.use-trash" true)
 
+(cc/defprop-optstr icat-host
+  "The hostname for the server running the ICAT database."
+  [props config-valid configs]
+  "bulk-typer.icat.host" "irods")
+
+
+(cc/defprop-optint icat-port
+  "The port that the ICAT is accepting connections on."
+  [props config-valid configs]
+  "bulk-typer.icat.port" "5432")
+
+
+(cc/defprop-optstr icat-user
+  "The user for the ICAT database."
+  [props config-valid configs]
+  "bulk-typer.icat.user" "rods")
+
+
+(cc/defprop-optstr icat-password
+  "The password for the ICAT database."
+  [props config-valid configs]
+  "bulk-typer.icat.password" "notprod")
+
+
+(cc/defprop-optstr icat-db
+  "The database name for the ICAT database. Yeah, it's most likely going to be 'ICAT'."
+  [props config-valid configs]
+  "bulk-typer.icat.db" "ICAT")
+
 (defn- exception-filters
   []
-  (remove nil? [(irods-pass) (irods-user)]))
+  (remove nil? [(icat-password) (icat-user) (irods-pass) (irods-user)]))
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

@@ -8,6 +8,7 @@
                  [me.raynes/fs "1.4.6"]
                  [org.cyverse/debug-utils "2.9.0-SNAPSHOT"]
                  [org.cyverse/common-cli "2.8.1"]
+                 [org.cyverse/clj-icat-direct "2.8.7-SNAPSHOT"]
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]
                  [org.cyverse/clj-jargon "2.8.9"
                    :exclusions [[org.slf4j/slf4j-log4j12]
