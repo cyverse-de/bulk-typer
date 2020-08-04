@@ -90,24 +90,20 @@
   [props config-valid configs]
   "bulk-typer.icat.host" "irods")
 
-
 (cc/defprop-optint icat-port
   "The port that the ICAT is accepting connections on."
   [props config-valid configs]
   "bulk-typer.icat.port" "5432")
-
 
 (cc/defprop-optstr icat-user
   "The user for the ICAT database."
   [props config-valid configs]
   "bulk-typer.icat.user" "rods")
 
-
 (cc/defprop-optstr icat-password
   "The password for the ICAT database."
   [props config-valid configs]
   "bulk-typer.icat.password" "notprod")
-
 
 (cc/defprop-optstr icat-db
   "The database name for the ICAT database. Yeah, it's most likely going to be 'ICAT'."

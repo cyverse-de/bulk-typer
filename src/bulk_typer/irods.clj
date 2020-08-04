@@ -14,6 +14,7 @@
 (defn get-file-type
   "Uses heuristomancer to determine a the file type of a file."
   [data & info]
+  (log/info "get-file-type data:" data " \\;")
   (log-time (str "get-file-type" info)
     (let [result (hm/identify-sample data)]
       (if (or (nil? result) (empty? (name result)))

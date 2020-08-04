@@ -47,17 +47,16 @@
 (defn- do-files
   [files]
   (log-time "with-jargon"
-  (init/with-jargon (mk-jargon-cfg) [cm]
-    (let [;; create an agent, queue loading data, and queue getting the file type from that data
-          agents (mapv (fn [f]
-                         (as-> (agent f) a
-                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
-                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
-                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
+    (init/with-jargon (mk-jargon-cfg) [cm]
+      (let [;; create an agent, queue loading data, and queue getting the file type from that data
+            agents (mapv (fn [f]
+                           (as-> (agent f) a
+                                 (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
+                                 (send a (fn [[f d]] [f (irods/get-file-type d f)]))
+                                 (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
         ;; wait for agents to finish everything we've tasked them with before deref
-      (log-time "await" (apply await agents))
-      (mapv deref agents))))
-  )
+        (log-time "await" (apply await agents))
+        (mapv deref agents)))))
 
 (defn- do-file
   [file]
@@ -75,15 +74,14 @@
         (ccli/exit 1 "The config file is not readable."))
       (cfg/load-config-from-file (:config options))
       (when (:file options)
-      (mapv (fn [x] (log/info x))
-            (log-time "do-file"
-              (do-file (:file options))))
-      )
+        (mapv (fn [x] (log/info x))
+              (log-time "do-file"
+                (do-file (:file options)))))
       (when (:prefix options)
-        (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
-        (let [files (log-time "icat" (icat/prefixed-files-without-attr (:prefix options) "ipc-filetype"))]
-          (do-files files))
-      )
+        (log-time "prefix"
+          (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
+          (let [files (log-time "icat" (icat/prefixed-files-without-attr (:prefix options) "ipc-filetype"))]
+            (do-files files))))
       (.shutdown irods-pool)
       (.shutdown icat-pool)
       (shutdown-agents))))
