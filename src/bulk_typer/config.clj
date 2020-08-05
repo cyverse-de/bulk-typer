@@ -30,6 +30,11 @@
   [props config-valid configs]
   "bulk-typer.unknown-type" "unknown")
 
+(cc/defprop-optint base-prefix-length
+  "The number of characters to use as a UUID prefix when crawling the data store"
+  [props config-valid configs]
+  "bulk-typer.base-prefix-length" 4)
+
 (cc/defprop-optlong filetype-read-amount
   "The size, in bytes as a long, of the sample read from iRODS"
   [props config-valid configs]

@@ -1,6 +1,7 @@
 (ns bulk-typer.core
   (:gen-class)
   (:require [me.raynes.fs :as fs]
+            [clojure.math.numeric-tower :as math]
             [clj-jargon.init :as init]
             [clj-icat-direct.icat :as icat]
             [debug-utils.log-time :refer [log-time]]
@@ -44,9 +45,16 @@
              :retry-sleep (cfg/irods-retry-sleep)
              :use-trash   (cfg/irods-use-trash)))
 
+(defn make-prefixes
+  ([]
+   (make-prefixes (cfg/base-prefix-length)))
+  ([length]
+   (let [format-str (format "%%0%dx" length)]
+   (map (fn [x] (format format-str x)) (shuffle (range 0 (math/expt 16 length)))))))
+
 (defn- do-files
   [files]
-  (log-time "with-jargon"
+  (log-time "do-files with-jargon"
     (init/with-jargon (mk-jargon-cfg) [cm]
       (let [;; create an agent, queue loading data, and queue getting the file type from that data
             agents (mapv (fn [f]
@@ -58,11 +66,24 @@
         (log-time "await" (apply await agents))
         (mapv deref agents)))))
 
+(defn- do-prefix
+  [prefix]
+  (log-time (str "do-prefix " prefix)
+    (let [files (log-time "icat" (icat/prefixed-files-without-attr prefix "ipc-filetype"))]
+      (do-files files))))
+
 (defn- do-file
   [file]
   (when (ft/exists? file)
     (let [files (remove string/blank? (string/split (slurp file) (re-pattern "\n")))]
       (do-files files))))
+
+(defn- do-all-prefixes
+  []
+  (log-time "do-all-prefixes"
+  (let [prefixes (take 2 (make-prefixes))]
+    (doseq [prefix prefixes]
+      (do-prefix prefix)))))
 
 (defn -main
   [& args]
@@ -77,11 +98,12 @@
         (mapv (fn [x] (log/info x))
               (log-time "do-file"
                 (do-file (:file options)))))
+      (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
       (when (:prefix options)
         (log-time "prefix"
-          (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
-          (let [files (log-time "icat" (icat/prefixed-files-without-attr (:prefix options) "ipc-filetype"))]
-            (do-files files))))
+          (do-prefix (:prefix options))))
+      (when-not (or (:file options) (:prefix options))
+        (do-all-prefixes))
       (.shutdown irods-pool)
       (.shutdown icat-pool)
       (shutdown-agents))))
