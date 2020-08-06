@@ -6,6 +6,7 @@
   :uberjar-name "bulk-typer-standalone.jar"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [me.raynes/fs "1.4.6"]
+                 [com.novemberain/langohr "3.6.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.cyverse/debug-utils "2.9.0-SNAPSHOT"]
                  [org.cyverse/common-cli "2.8.1"]

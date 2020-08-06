@@ -20,6 +20,7 @@
   [props config-valid configs]
   "bulk-typer.environment-name" "docker-compose")
 
+
 (cc/defprop-optstr garnish-type-attribute
   "The value that goes in the attribute column for AVUs that define a file type."
   [props config-valid configs]
@@ -39,6 +40,7 @@
   "The size, in bytes as a long, of the sample read from iRODS"
   [props config-valid configs]
   "bulk-typer.filetype-read-amount" 1024)
+
 
 (cc/defprop-optstr irods-host
   "Returns the iRODS hostname/IP address."
@@ -90,6 +92,7 @@
   [props config-valid configs]
   "bulk-typer.irods.use-trash" true)
 
+
 (cc/defprop-optstr icat-host
   "The hostname for the server running the ICAT database."
   [props config-valid configs]
@@ -115,6 +118,42 @@
   [props config-valid configs]
   "bulk-typer.icat.db" "ICAT")
 
+
+(cc/defprop-optstr amqp-exchange-type
+  "The exchange type for the iRODS updates"
+  [props config-valid configs]
+  "bulk-typer.amqp.exchange.type" "topic")
+
+(cc/defprop-optstr amqp-uri
+  "The URI for the AMQP broker"
+  [props config-valid configs]
+  "bulk-typer.amqp.uri" "amqp://guest:guest@rabbit:5672/")
+
+(cc/defprop-optint amqp-retry-sleep
+  "The number of milliseconds to sleep between connection retries."
+  [props config-valid configs]
+  "bulk-typer.amqp.retry-sleep" 10000)
+
+(cc/defprop-optstr amqp-exchange
+  "The exchange to listen to for trigger messages."
+  [props config-valid configs]
+  "bulk-typer.amqp.exchange" "de")
+
+(cc/defprop-optboolean amqp-exchange-durable?
+  "Toggles whether or not the rabbitmq exchange is durable."
+  [props config-valid configs]
+  "bulk-typer.amqp.exchange.durable" true)
+
+(cc/defprop-optboolean amqp-exchange-auto-delete?
+  "Toggles whether to auto-delete the exchange or not."
+  [props config-valid configs]
+  "bulk-typer.amqp.exchange.auto-delete" false)
+
+
+(cc/defprop-optint amqp-qos
+  "The number of messages to allow to be delivered to this client at once without acknowledgement."
+  [props config-valid configs]
+  "info-typer.amqp.qos" 100)
 (defn- exception-filters
   []
   (remove nil? [(icat-password) (icat-user) (irods-pass) (irods-user)]))
