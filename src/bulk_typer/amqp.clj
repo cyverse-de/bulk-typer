@@ -98,7 +98,9 @@
 (defn handler
   [real-handler chan {:keys [delivery-tag redelivery?]} payload]
   (try+
+    (log/info "Got a reindex message")
     (real-handler)
+    (log/info "Finished reindexing")
     (lb/ack chan delivery-tag)
     (catch ce/error? err
       (lb/reject chan delivery-tag (not redelivery?))
