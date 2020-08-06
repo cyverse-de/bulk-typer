@@ -2,10 +2,10 @@
   (:gen-class)
   (:require [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as icat]
-            [debug-utils.log-time :refer [log-time]]
             [common-cli.core :as ccli]
             [clojure.tools.logging :as log]
             [bulk-typer.actions :as actions]
+            [bulk-typer.amqp :as amqp]
             [bulk-typer.config :as cfg]
             [service-logging.thread-context :as tc]))
 
@@ -26,6 +26,19 @@
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
+(defn- amqp-config
+  []
+  {:uri                   (cfg/amqp-uri)
+   :exchange              (cfg/amqp-exchange)
+   :exchange-type         (cfg/amqp-exchange-type)
+   :exchange-durable?     (cfg/amqp-exchange-durable?)
+   :exchange-auto-delete? (cfg/amqp-exchange-auto-delete?)
+   :queue-name            (str "bulk-typer." (cfg/environment-name))
+   :queue-durable?        true
+   :queue-exclusive?      false
+   :queue-auto-delete?    false
+   :qos                   (cfg/amqp-qos)})
+
 (defn -main
   [& args]
   (tc/with-logging-context svc-info
@@ -36,17 +49,17 @@
         (ccli/exit 1 "The config file is not readable."))
       (cfg/load-config-from-file (:config options))
       (when (:file options)
-        (mapv (fn [x] (log/info x))
-              (log-time "do-file"
-                (actions/do-file (:file options)))))
+        (actions/do-file (:file options)))
       (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
       (when (:prefix options)
-        (log-time "prefix"
-          (actions/do-prefix (:prefix options))))
+        (actions/do-prefix (:prefix options)))
       (when (:full options)
         (actions/do-all-prefixes))
-      (when (:periodic options)
-      ;; connect to amqp, get channel, make queue, declare exchange, bind topics, subscribe and run do-all-prefixes
-        )
-      (actions/shutdown)
-      (shutdown-agents))))
+      (if (:periodic options)
+        (try
+          (amqp/configure (partial amqp/handler actions/do-all-prefixes) (amqp-config) ["index.all" "index.info-types"])
+          (catch Exception e
+            (log/error "setting up AMQP" e)))
+        (do
+          (actions/shutdown)
+          (shutdown-agents))))))

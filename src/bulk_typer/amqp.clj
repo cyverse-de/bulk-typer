@@ -1,5 +1,7 @@
 (ns bulk-typer.amqp
   (:require [clojure.tools.logging       :as log]
+            [slingshot.slingshot         :refer [try+]]
+            [clojure-commons.error-codes :as ce]
             [langohr.core                :as rmq]
             [langohr.basic               :as lb]
             [langohr.channel             :as lch]
@@ -92,3 +94,15 @@
        {:routing-key topic}))
 
     (subscribe chan (:queue-name cfg-map) msg-fn :auto-ack false)))
+
+(defn handler
+  [real-handler chan {:keys [delivery-tag redelivery?]} payload]
+  (try+
+    (real-handler)
+    (lb/ack chan delivery-tag)
+    (catch ce/error? err
+      (lb/reject chan delivery-tag (not redelivery?))
+      (log/error err))
+    (catch Exception err
+      (lb/reject chan delivery-tag (not redelivery?))
+      (log/error err))))

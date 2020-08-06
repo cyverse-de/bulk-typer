@@ -8,7 +8,6 @@
                  [me.raynes/fs "1.4.6"]
                  [com.novemberain/langohr "3.6.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
-                 [org.cyverse/debug-utils "2.9.0-SNAPSHOT"]
                  [org.cyverse/common-cli "2.8.1"]
                  [org.cyverse/clj-icat-direct "2.8.7-SNAPSHOT"]
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]

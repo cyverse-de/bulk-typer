@@ -3,7 +3,6 @@
             [clojure-commons.file-utils :as ft]
             [clj-jargon.init :as init]
             [clj-icat-direct.icat :as icat]
-            [debug-utils.log-time :refer [log-time]]
             [clojure.string :as string]
             [bulk-typer.irods :as irods]
             [bulk-typer.config :as cfg])
@@ -34,23 +33,21 @@
 
 (defn- do-files
   [files]
-  (log-time "do-files with-jargon"
-    (init/with-jargon (mk-jargon-cfg) [cm]
-      (let [;; create an agent, queue loading data, and queue getting the file type from that data
-            agents (mapv (fn [f]
-                           (as-> (agent f) a
-                                 (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
-                                 (send a (fn [[f d]] [f (irods/get-file-type d f)]))
-                                 (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
-        ;; wait for agents to finish everything we've tasked them with before deref
-        (log-time "await" (apply await agents))
-        (mapv deref agents)))))
+  (init/with-jargon (mk-jargon-cfg) [cm]
+    (let [;; create an agent, queue loading data, and queue getting the file type from that data
+          agents (mapv (fn [f]
+                         (as-> (agent f) a
+                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
+                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
+                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
+      ;; wait for agents to finish everything we've tasked them with before deref
+      (apply await agents)
+      (mapv deref agents))))
 
 (defn do-prefix
   [prefix]
-  (log-time (str "do-prefix " prefix)
-    (let [files (log-time "icat" (icat/prefixed-files-without-attr prefix "ipc-filetype"))]
-      (do-files files))))
+  (let [files (icat/prefixed-files-without-attr prefix "ipc-filetype")]
+    (do-files files)))
 
 (defn do-file
   [file]
@@ -60,10 +57,9 @@
 
 (defn do-all-prefixes
   []
-  (log-time "do-all-prefixes"
-  (let [prefixes (make-prefixes)]
+  (let [prefixes (take 1 (make-prefixes))]
     (doseq [prefix prefixes]
-      (do-prefix prefix)))))
+      (do-prefix prefix))))
 
 (defn shutdown
   []
