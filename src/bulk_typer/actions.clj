@@ -57,7 +57,7 @@
 
 (defn do-all-prefixes
   []
-  (let [prefixes (take 1 (make-prefixes))]
+  (let [prefixes (make-prefixes)]
     (doseq [prefix prefixes]
       (do-prefix prefix))))
 
