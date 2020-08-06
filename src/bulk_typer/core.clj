@@ -29,6 +29,8 @@
     :default "/etc/iplant/de/bulk-typer.properties"]
    ["-f" "--file PATH" "Path to a file of paths to process"]
    ["-p" "--prefix PREFIX" "UUID prefix to process"]
+   ["-x" "--full" "Process the whole data store once, then exit"]
+   ["-y" "--periodic" "Listen for amqp messages, index.all or index.data, and run a full reindex when one is received."]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
@@ -81,7 +83,7 @@
 (defn- do-all-prefixes
   []
   (log-time "do-all-prefixes"
-  (let [prefixes (take 2 (make-prefixes))]
+  (let [prefixes (make-prefixes)]
     (doseq [prefix prefixes]
       (do-prefix prefix)))))
 
@@ -102,8 +104,11 @@
       (when (:prefix options)
         (log-time "prefix"
           (do-prefix (:prefix options))))
-      (when-not (or (:file options) (:prefix options))
+      (when (:full options)
         (do-all-prefixes))
+      (when (:periodic options)
+      ;; connect to amqp, get channel, make queue, declare exchange, bind topics, subscribe and run do-all-prefixes
+        )
       (.shutdown irods-pool)
       (.shutdown icat-pool)
       (shutdown-agents))))
