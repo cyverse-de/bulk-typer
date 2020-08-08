@@ -51,6 +51,7 @@ spec:
         args:
           - --config
           - /etc/iplant/de/bulk-typer.properties
+          - --periodic
         volumeMounts:
           - name: localtime
             mountPath: /etc/localtime
