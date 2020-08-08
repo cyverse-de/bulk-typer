@@ -8,6 +8,7 @@
             [langohr.exchange            :as le]
             [langohr.queue               :as lq]
             [langohr.consumers           :as lc]
+            [service-logging.thread-context :as tc]
             [bulk-typer.config           :as cfg])
   (:import [java.net SocketException]))
 
@@ -97,14 +98,15 @@
 
 (defn handler
   [real-handler chan {:keys [delivery-tag redelivery?]} payload]
-  (try+
-    (log/info "Got a reindex message")
-    (real-handler)
-    (log/info "Finished reindexing")
-    (lb/ack chan delivery-tag)
-    (catch ce/error? err
-      (lb/reject chan delivery-tag (not redelivery?))
-      (log/error err))
-    (catch Exception err
-      (lb/reject chan delivery-tag (not redelivery?))
-      (log/error err))))
+  (tc/with-logging-context {:delivery-tag delivery-tag :redelivery? redelivery?}
+    (try+
+      (log/info "Got a reindex message")
+      (real-handler)
+      (log/info "Finished reindexing")
+      (lb/ack chan delivery-tag)
+      (catch ce/error? err
+        (lb/reject chan delivery-tag (not redelivery?))
+        (log/error err))
+      (catch Exception err
+        (lb/reject chan delivery-tag (not redelivery?))
+        (log/error err)))))

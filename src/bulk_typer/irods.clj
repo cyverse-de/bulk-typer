@@ -1,12 +1,15 @@
 (ns bulk-typer.irods
   (:use [clj-jargon.item-ops :only [input-stream]])
   (:require [heuristomancer.core :as hm]
+            [clojure.tools.logging :as log]
             [clj-jargon.metadata :as meta]
+            [service-logging.thread-context :as tc]
             [bulk-typer.config :as cfg]))
 
 (defn get-data
   [cm path]
-  (hm/sip (input-stream cm path) (cfg/filetype-read-amount)))
+  (tc/with-logging-context {:path path}
+    (hm/sip (input-stream cm path) (cfg/filetype-read-amount))))
 
 (defn get-file-type
   "Uses heuristomancer to determine a the file type of a file."
@@ -18,5 +21,7 @@
 
 (defn add-type-if-unset
   [cm path ctype]
+  (tc/with-logging-context {:path path :info-type ctype}
     (when-not (meta/attribute? cm path (cfg/garnish-type-attribute))
-      (meta/add-metadata cm path (cfg/garnish-type-attribute) ctype "ipc-bulk-typer")))
+      (log/info "Adding type " ctype " to path " path)
+      (meta/add-metadata cm path (cfg/garnish-type-attribute) ctype "ipc-bulk-typer"))))

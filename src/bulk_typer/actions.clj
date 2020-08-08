@@ -1,9 +1,11 @@
 (ns bulk-typer.actions
   (:require [clojure.math.numeric-tower :as math]
+            [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [clj-jargon.init :as init]
             [clj-icat-direct.icat :as icat]
             [clojure.string :as string]
+            [service-logging.thread-context :as tc]
             [bulk-typer.irods :as irods]
             [bulk-typer.config :as cfg])
   (:import [java.util.concurrent Executors]))
@@ -46,8 +48,11 @@
 
 (defn do-prefix
   [prefix]
-  (let [files (icat/prefixed-files-without-attr prefix "ipc-filetype")]
-    (do-files files)))
+  (tc/with-logging-context {:prefix prefix}
+    (log/info "Processing prefix " prefix)
+    (let [files (icat/prefixed-files-without-attr prefix "ipc-filetype")]
+      (do-files files))
+    (log/info "Done processing prefix " prefix)))
 
 (defn do-file
   [file]

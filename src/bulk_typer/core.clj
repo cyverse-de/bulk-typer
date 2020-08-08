@@ -49,17 +49,20 @@
         (ccli/exit 1 "The config file is not readable."))
       (cfg/load-config-from-file (:config options))
       (when (:file options)
-        (actions/do-file (:file options)))
+        (tc/with-logging-context {:mode "file" :file (:file options)}
+          (actions/do-file (:file options))))
       (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
       (when (:prefix options)
-        (actions/do-prefix (:prefix options)))
+        (tc/with-logging-context {:mode "prefix"}
+          (actions/do-prefix (:prefix options))))
       (when (:full options)
         (actions/do-all-prefixes))
       (if (:periodic options)
-        (try
-          (amqp/configure (partial amqp/handler actions/do-all-prefixes) (amqp-config) ["index.all" "index.info-types"])
-          (catch Exception e
-            (log/error "setting up AMQP" e)))
+        (tc/with-logging-context {:mode "periodic"}
+          (try
+            (amqp/configure (partial amqp/handler actions/do-all-prefixes) (amqp-config) ["index.all" "index.info-types"])
+            (catch Exception e
+              (log/error "setting up AMQP" e))))
         (do
           (actions/shutdown)
           (shutdown-agents))))))
