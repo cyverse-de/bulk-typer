@@ -50,7 +50,7 @@
   [prefix]
   (tc/with-logging-context {:prefix prefix}
     (log/info "Processing prefix " prefix)
-    (let [files (icat/prefixed-files-without-attr prefix "ipc-filetype")]
+    (let [files (distinct (icat/prefixed-files-without-attr prefix "ipc-filetype"))]
       (do-files files))
     (log/info "Done processing prefix " prefix)))
 
