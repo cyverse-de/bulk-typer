@@ -42,9 +42,9 @@
                                (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
                                (send a (fn [[f d]] [f (irods/get-file-type d f)]))
                                (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
-      ;; wait for agents to finish everything we've tasked them with before deref
-      (apply await agents)
-      (mapv deref agents))))
+      ;; wait for agents to finish everything we've tasked them with before deref, hopefully
+      (apply await-for 120000 agents) ;; somewhat arbitrary timeout
+      (mapv deref (remove #(agent-error %) agents)))))
 
 (defn do-prefix
   [prefix]
