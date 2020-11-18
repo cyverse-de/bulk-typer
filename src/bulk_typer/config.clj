@@ -153,7 +153,8 @@
 (cc/defprop-optint amqp-qos
   "The number of messages to allow to be delivered to this client at once without acknowledgement."
   [props config-valid configs]
-  "info-typer.amqp.qos" 100)
+  "bulk-typer.amqp.qos" 1)
+
 (defn- exception-filters
   []
   (remove nil? [(icat-password) (icat-user) (irods-pass) (irods-user)]))
