@@ -9,9 +9,9 @@
                  [com.novemberain/langohr "3.6.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/clj-icat-direct "2.8.7"]
+                 [org.cyverse/clj-icat-direct "2.9.0"]
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]
-                 [org.cyverse/clj-jargon "2.8.9"
+                 [org.cyverse/clj-jargon "2.8.12"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
                  [org.cyverse/heuristomancer "2.8.6"]]
