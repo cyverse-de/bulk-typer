@@ -5,12 +5,19 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :uberjar-name "bulk-typer-standalone.jar"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [cheshire "5.10.0"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [me.raynes/fs "1.4.6"]
                  [com.novemberain/langohr "3.6.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.cyverse/common-cli "2.8.1"]
                  [org.cyverse/clj-icat-direct "2.9.0"]
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]
+                 [org.cyverse/service-logging "2.8.2"]
                  [net.logstash.logback/logstash-logback-encoder "4.11"]
                  [org.cyverse/clj-jargon "3.0.0-SNAPSHOT"
                    :exclusions [[org.slf4j/slf4j-log4j12]
