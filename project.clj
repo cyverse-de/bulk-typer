@@ -1,4 +1,4 @@
-(defproject org.cyverse/bulk-typer "0.1.0"
+(defproject org.cyverse/bulk-typer "0.1.1-SNAPSHOT"
   :description "A service that processes many files to add info-types"
   :url "https://github.com/cyverse-de/bulk-typer"
   :license {:name "BSD"
