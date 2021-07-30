@@ -40,7 +40,7 @@ spec:
                 path: bulk-typer.properties
       containers:
       - name: bulk-typer
-        image: discoenv/bulk-typer
+        image: harbor.cyverse.org/de/bulk-typer
         resources:
           requests:
             cpu: "1000m"
