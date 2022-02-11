@@ -23,6 +23,7 @@
                                 [com.fasterxml.jackson.core/jackson-core]]]
                  [me.raynes/fs "1.4.6"]
                  [com.novemberain/langohr "3.6.1"]
+                 [slingshot "0.12.2"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.cyverse/common-cli "2.8.1"]
                  [org.cyverse/clj-icat-direct "2.9.0"]

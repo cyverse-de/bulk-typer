@@ -1,5 +1,6 @@
 (ns bulk-typer.actions
-  (:require [clojure.math.numeric-tower :as math]
+  (:require [slingshot.slingshot :refer [try+]]
+            [clojure.math.numeric-tower :as math]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [clj-jargon.init :as init]
@@ -33,18 +34,37 @@
    (let [format-str (format "%%0%dx" length)]
    (map (fn [x] (format format-str x)) (shuffle (range 0 (math/expt 16 length)))))))
 
+(defn- do-or-error
+  "Takes an action, agent state, and any other args. If it throws an error,
+  returns an object with the error at a known key (which should continue as
+  agent state). If passed an error, simply returns it without doing further
+  computation."
+  [action agent-state & args]
+  (tc/with-logging-context (select-keys agent-state [:filename :type :set-result])
+    (if (contains? agent-state ::error)
+      agent-state
+      (try+
+        (apply action agent-state args)
+        (catch Object o
+          (log/error o)
+          (assoc agent-state ::error o))))))
+
 (defn- do-files
   [files]
   (init/with-jargon (mk-jargon-cfg) [cm]
     (let [;; create an agent, queue loading data, and queue getting the file type from that data
           agents (mapv (fn [f]
-                         (as-> (agent f) a
-                               (send-via irods-pool a (fn [f] [f (irods/get-data cm f)]))
-                               (send a (fn [[f d]] [f (irods/get-file-type d f)]))
-                               (send-via icat-pool a (fn [[f t]] [f t (irods/add-type-if-unset cm f t)])))) files)]
+                         (as-> (agent {:filename f}) a
+                               (send-via irods-pool a
+                                         (partial do-or-error (fn [d] (assoc d :data (irods/get-data cm (:filename d))))))
+                               (send     a
+                                         (partial do-or-error (fn [d] (assoc d :type (irods/get-file-type (:data d) (:filename d))))))
+                               (send-via icat-pool a
+                                         (partial do-or-error (fn [d] (assoc d :set-result (irods/add-type-if-unset cm (:filename d) (:type d))))))))
+                       files)]
       ;; wait for agents to finish everything we've tasked them with before deref, hopefully
-      (apply await-for 120000 agents) ;; somewhat arbitrary timeout
-      (mapv deref (remove #(agent-error %) agents)))))
+      (apply await-for 300000 agents) ;; arbitrary timeout of 5 minutes, just for safety really
+      (mapv deref agents))))
 
 (defn do-prefix
   [prefix]
