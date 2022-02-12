@@ -7,6 +7,7 @@
             [bulk-typer.config :as cfg]))
 
 (defn get-data
+  "Fetches bulk-typer.config/filetype-read-amount bytes of the file at path"
   [cm path]
   (tc/with-logging-context {:path path}
     (hm/sip (input-stream cm path) (cfg/filetype-read-amount))))
@@ -20,6 +21,8 @@
       (name result))))
 
 (defn add-type-if-unset
+  "Checks if path has an info-type set (in case it was added while we were
+  calculating), then adds the provided type if not."
   [cm path ctype]
   (tc/with-logging-context {:path path :info-type ctype}
     (when-not (meta/attribute? cm path (cfg/garnish-type-attribute))
