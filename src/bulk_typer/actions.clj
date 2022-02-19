@@ -9,10 +9,22 @@
             [service-logging.thread-context :as tc]
             [bulk-typer.irods :as irods]
             [bulk-typer.config :as cfg])
-  (:import [java.util.concurrent Executors]))
+  (:import [java.util.concurrent Executors ThreadFactory]))
 
-(def irods-pool (Executors/newFixedThreadPool 5))
-(def icat-pool (Executors/newFixedThreadPool 5))
+(defn threadpool
+  "Make a thread pool with 'thread-count' executors that names threads using the 'prefix'."
+  [prefix thread-count]
+  (let [counter (atom 0)]
+  (Executors/newFixedThreadPool
+    thread-count
+    (proxy [ThreadFactory] []
+      (newThread [^Runnable runnable]
+        (let [t (Thread. runnable)]
+          (.setName t (str prefix "-" (swap! counter inc)))
+          t))))))
+
+(def irods-pool (threadpool "irods" 5))
+(def icat-pool (threadpool "icat" 5))
 
 (defn- mk-jargon-cfg
   []

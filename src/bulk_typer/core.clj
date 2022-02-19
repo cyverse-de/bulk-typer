@@ -51,7 +51,9 @@
       (when (:file options)
         (tc/with-logging-context {:mode "file" :file (:file options)}
           (actions/do-file (:file options))))
-      (icat/setup-icat (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db)))
+      (icat/setup-icat
+        (assoc (icat/icat-db-spec (cfg/icat-host) (cfg/icat-user) (cfg/icat-password) :port (cfg/icat-port) :db (cfg/icat-db))
+               :test-connection-on-checkout true))
       (when (:prefix options)
         (tc/with-logging-context {:mode "prefix"}
           (actions/do-prefix (:prefix options))))

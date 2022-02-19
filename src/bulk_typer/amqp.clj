@@ -106,7 +106,7 @@
       (lb/ack chan delivery-tag)
       (catch ce/error? err
         (lb/reject chan delivery-tag (not redelivery?))
-        (log/error err))
+        (log/error (:throwable &throw-context) "Got an error during reindexing"))
       (catch Exception err
         (lb/reject chan delivery-tag (not redelivery?))
-        (log/error err)))))
+        (log/error (:throwable &throw-context) "Got an error during reindexing")))))
