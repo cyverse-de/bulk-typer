@@ -68,7 +68,7 @@
     (let [context (if (map? context) context {})
           ;; create an agent, queue loading data, and queue getting the file type from that data
           agents (mapv (fn [f]
-                         (as-> (agent (assoc context {:filename f})) a
+                         (as-> (agent (assoc context :filename f)) a
                                (send-via irods-pool a
                                          (partial do-or-error (fn [d] (assoc d :data (irods/get-data @cm (:filename d))))))
                                (send     a
