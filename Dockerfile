@@ -1,10 +1,12 @@
-FROM clojure:lein-alpine
+FROM clojure:openjdk-17-lein-alpine
 
 WORKDIR /usr/src/app
 
 RUN apk add --no-cache git
 
-RUN ln -s "/usr/bin/java" "/bin/bulk-typer"
+RUN ln -s "/opt/openjdk-17/bin/java" "/bin/bulk-typer"
+
+ENV OTEL_TRACES_EXPORTER none
 
 COPY project.clj /usr/src/app/
 RUN lein deps
@@ -15,7 +17,7 @@ COPY . /usr/src/app
 RUN lein uberjar && \
     cp target/bulk-typer-standalone.jar .
 
-ENTRYPOINT ["bulk-typer", "-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml", "-cp", ".:bulk-typer-standalone.jar", "bulk_typer.core"]
+ENTRYPOINT ["bulk-typer", "-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml", "-javaagent:/usr/src/app/opentelemetry-javaagent.jar", "-Dotel.resource.attributes=service.name=bulk-typer", "-cp", ".:bulk-typer-standalone.jar", "bulk_typer.core"]
 CMD ["--help"]
 
 ARG git_commit=unknown
