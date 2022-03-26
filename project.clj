@@ -29,6 +29,7 @@
                  [org.cyverse/clj-icat-direct "2.9.4"]
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]
                  [org.cyverse/service-logging "2.8.2" :exclusions [ch.qos.logback/logback-classic]]
+                 [org.cyverse/otel "0.2.5"]
                  [net.logstash.logback/logstash-logback-encoder "4.11"]
                  [org.cyverse/clj-jargon "3.0.3"
                    :exclusions [[org.slf4j/slf4j-log4j12]
