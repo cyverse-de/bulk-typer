@@ -30,7 +30,7 @@
                  [org.cyverse/clojure-commons "2.8.0" :exclusions [commons-logging]]
                  [org.cyverse/service-logging "2.8.2" :exclusions [ch.qos.logback/logback-classic]]
                  [net.logstash.logback/logstash-logback-encoder "4.11"]
-                 [org.cyverse/clj-jargon "3.0.2"
+                 [org.cyverse/clj-jargon "3.0.3"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
                  [org.cyverse/heuristomancer "2.8.6"]]
