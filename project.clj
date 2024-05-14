@@ -30,7 +30,6 @@
                  [org.cyverse/clojure-commons "3.0.7" :exclusions [commons-logging]]
                  [org.cyverse/service-logging "2.8.3" :exclusions [ch.qos.logback/logback-classic]]
                  [org.cyverse/otel "0.2.5"]
-                 [net.logstash.logback/logstash-logback-encoder "7.4"]
                  [org.cyverse/clj-jargon "3.1.0"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
