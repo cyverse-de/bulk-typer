@@ -29,7 +29,6 @@
                  [org.cyverse/clj-icat-direct "2.9.5"]
                  [org.cyverse/clojure-commons "3.0.8" :exclusions [commons-logging]]
                  [org.cyverse/service-logging "2.8.4" :exclusions [ch.qos.logback/logback-classic]]
-                 [org.cyverse/otel "0.2.6"]
                  [org.cyverse/clj-jargon "3.1.1"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
@@ -38,11 +37,10 @@
              :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
   :cljfmt {:indents {log-time [[:inner 0]]}}
   :main ^:skip-aot bulk-typer.core
-  :profiles {:dev     {:resource-paths ["conf/test"]
-                       :jvm-opts       ["-Dotel.javaagent.enabled=false"]}
+  :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
   :plugins [[jonase/eastwood "1.4.3"]
             [lein-ancient "0.7.0"]
             [test2junit "1.4.4"]]
   :uberjar-exclusions [#"LICENSE" #"NOTICE"]
-  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml" "-javaagent:./opentelemetry-javaagent.jar" "-Dotel.resource.attributes=service.name=bulk-typer"])
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml"])
