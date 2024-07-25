@@ -1,10 +1,12 @@
-FROM clojure:openjdk-17-lein-alpine
+FROM clojure:temurin-22-lein-jammy
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache git
+RUN apt-get update && \
+    apt-get install -y git && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN ln -s "/opt/openjdk-17/bin/java" "/bin/bulk-typer"
+RUN ln -s "/opt/java/openjdk/bin/java" "/bin/bulk-typer"
 
 COPY project.clj /usr/src/app/
 RUN lein deps
@@ -12,7 +14,7 @@ RUN lein deps
 COPY conf/main/logback.xml /usr/src/app/
 COPY . /usr/src/app
 
-RUN lein uberjar && \
+RUN lein do clean, uberjar && \
     cp target/bulk-typer-standalone.jar .
 
 ENTRYPOINT ["bulk-typer", "-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml", "-cp", ".:bulk-typer-standalone.jar", "bulk_typer.core"]
