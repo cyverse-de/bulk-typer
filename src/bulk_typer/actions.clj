@@ -8,8 +8,7 @@
             [clojure.string :as string]
             [service-logging.thread-context :as tc]
             [bulk-typer.irods :as irods]
-            [bulk-typer.config :as cfg]
-            [otel.otel :as otel])
+            [bulk-typer.config :as cfg])
   (:import [java.util.concurrent Executors ThreadFactory]))
 
 (defn threadpool
@@ -53,43 +52,39 @@
   returns an object with the error at a known key (which should continue as
   agent state). If passed an error, simply returns it without doing further
   computation."
-  [span action agent-state & args]
-  (with-open [_ (otel/span-scope span)]
-    (tc/with-logging-context (select-keys agent-state [:filename :type :set-result :prefix])
-      (if (contains? agent-state ::error)
-        agent-state
-        (try+
-          (apply action agent-state args)
-          (catch Object o
-            (log/error o)
-            (assoc agent-state ::error o)))))))
+  [action agent-state & args]
+  (tc/with-logging-context (select-keys agent-state [:filename :type :set-result :prefix])
+    (if (contains? agent-state ::error)
+      agent-state
+      (try+
+       (apply action agent-state args)
+       (catch Object o
+         (log/error o)
+         (assoc agent-state ::error o))))))
 
 (defn- do-files
   [files & context]
-  (otel/with-span [s ["do-files"]]
-    (init/with-jargon (mk-jargon-cfg) :lazy true [cm]
-      (let [context (if (map? context) context {})
+  (init/with-jargon (mk-jargon-cfg) :lazy true [cm]
+    (let [context (if (map? context) context {})
             ;; create an agent, queue loading data, and queue getting the file type from that data
-            agents (mapv (fn [f]
-                           (otel/with-span [s ["file agent" {:attributes {"irods.path" f}}]]
-                             (as-> (agent (assoc context :filename f)) a
-                                   (send-via irods-pool a
-                                             (partial do-or-error s (fn [d] (assoc d :data (irods/get-data @cm (:filename d))))))
-                                   (send     a
-                                             (partial do-or-error s (fn [d] (assoc d :type (irods/get-file-type (:data d) (:filename d))))))
-                                   (send-via metadata-pool a
-                                             (partial do-or-error s (fn [d] (assoc d :set-result (irods/add-type-if-unset @cm (:filename d) (:type d)))))))))
-                         files)]
+          agents (mapv (fn [f]
+                         (as-> (agent (assoc context :filename f)) a
+                           (send-via irods-pool a
+                                     (partial do-or-error (fn [d] (assoc d :data (irods/get-data @cm (:filename d))))))
+                           (send     a
+                                     (partial do-or-error (fn [d] (assoc d :type (irods/get-file-type (:data d) (:filename d))))))
+                           (send-via metadata-pool a
+                                     (partial do-or-error (fn [d] (assoc d :set-result (irods/add-type-if-unset @cm (:filename d) (:type d))))))))
+                       files)]
         ;; wait for agents to finish everything we've tasked them with before deref, hopefully
-        (apply await-for 300000 agents) ;; arbitrary timeout of 5 minutes, just for safety really
-        (mapv deref agents)))))
+      (apply await-for 300000 agents) ;; arbitrary timeout of 5 minutes, just for safety really
+      (mapv deref agents))))
 
 (defn- get-files-for-prefix
-  [span prefix]
+  [prefix]
   (let [a (agent {:prefix prefix})]
     (send-via icat-pool a
               (partial do-or-error
-                       span
                        (fn [d]
                          (assoc d :data
                            (tc/with-logging-context {:prefix prefix}
@@ -107,12 +102,11 @@
 
 (defn do-prefix
   [prefix]
-  (otel/with-span [span ["do-prefix" {:attributes {"uuid-prefix" prefix}}]]
-    (tc/with-logging-context {:prefix prefix}
-      (log/info "Processing prefix " prefix)
-      (let [files (get-files-for-prefix span prefix)]
-        (do-files @files :prefix prefix))
-      (log/info "Done processing prefix " prefix))))
+  (tc/with-logging-context {:prefix prefix}
+    (log/info "Processing prefix " prefix)
+    (let [files (get-files-for-prefix prefix)]
+      (do-files @files :prefix prefix))
+    (log/info "Done processing prefix " prefix)))
 
 (defn do-file
   [file]
@@ -122,15 +116,13 @@
 
 (defn do-all-prefixes
   []
-  (otel/with-span [span ["do-all-prefixes"]]
-    (let [prefixes (make-prefixes)
-          prefix-files (map #(vector % (get-files-for-prefix span %)) prefixes)]
-      (doseq [[prefix files] prefix-files]
-        (otel/with-span [span ["single prefix" {:attributes {"uuid-prefix" prefix}}]]
-          (tc/with-logging-context {:prefix prefix}
-            (log/info "Processing prefix " prefix)
-            (do-files @files :prefix prefix)
-            (log/info "Done processing prefix " prefix)))))))
+  (let [prefixes (make-prefixes)
+        prefix-files (map #(vector % (get-files-for-prefix %)) prefixes)]
+    (doseq [[prefix files] prefix-files]
+      (tc/with-logging-context {:prefix prefix}
+        (log/info "Processing prefix " prefix)
+        (do-files @files :prefix prefix)
+        (log/info "Done processing prefix " prefix)))))
 
 (defn shutdown
   []
