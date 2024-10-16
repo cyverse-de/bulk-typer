@@ -17,7 +17,7 @@ COPY . /usr/src/app
 RUN lein do clean, uberjar && \
     cp target/bulk-typer-standalone.jar .
 
-ENTRYPOINT ["bulk-typer", "-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml", "-cp", ".:bulk-typer-standalone.jar", "bulk_typer.core"]
+ENTRYPOINT ["bulk-typer", "-Dlogback.configurationFile=/usr/src/app/logback.xml", "-cp", ".:bulk-typer-standalone.jar", "bulk_typer.core"]
 CMD ["--help"]
 
 ARG git_commit=unknown
