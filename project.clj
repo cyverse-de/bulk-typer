@@ -14,22 +14,21 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "bulk-typer-standalone.jar"
-  :dependencies [[org.clojure/clojure "1.11.3"]
-                 [cheshire "5.13.0"
-                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
-                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
-                                [com.fasterxml.jackson.core/jackson-annotations]
-                                [com.fasterxml.jackson.core/jackson-databind]
-                                [com.fasterxml.jackson.core/jackson-core]]]
+  :dependencies [[org.clojure/clojure "1.12.2"]
+                 [cheshire "6.0.0"]
                  [me.raynes/fs "1.4.6"]
-                 [com.novemberain/langohr "5.4.0" :exclusions [org.slf4j/slf4j-api]]
+                 [com.fasterxml.jackson.core/jackson-core "2.20.0"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.20.0"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.20.0"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.20.0"]
+                 [com.novemberain/langohr "5.6.0" :exclusions [org.slf4j/slf4j-api]]
                  [slingshot "0.12.2"]
                  [org.clojure/math.numeric-tower "0.1.0"]
                  [org.cyverse/common-cli "2.8.2"]
-                 [org.cyverse/clj-icat-direct "2.9.5"]
-                 [org.cyverse/clojure-commons "3.0.8" :exclusions [commons-logging]]
-                 [org.cyverse/service-logging "2.8.4"]
-                 [org.cyverse/clj-jargon "3.1.1"
+                 [org.cyverse/clj-icat-direct "2.9.7"]
+                 [org.cyverse/clojure-commons "3.0.11" :exclusions [commons-logging]]
+                 [org.cyverse/service-logging "2.8.5"]
+                 [org.cyverse/clj-jargon "3.1.4"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
                  [org.cyverse/heuristomancer "2.8.7"]]
