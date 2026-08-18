@@ -39,7 +39,7 @@
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
   :plugins [[jonase/eastwood "1.4.3"]
-            [lein-ancient "0.7.0"]
+            [lein-ancient "1.0.0"]
             [test2junit "1.4.4"]]
   :uberjar-exclusions [#"LICENSE" #"NOTICE"]
   :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/bulk-typer-logging.xml"])
